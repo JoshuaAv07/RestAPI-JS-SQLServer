@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const sql = require('mssql');
 const conn = require('./config')
+const bcrypt = require('bcrypt')
 
 app.use(cors());
 app.use(bodyParser.json({"limit": "100mb"}));
@@ -15,7 +16,7 @@ app.all("*", function(req, res, next){
     next();
 });
 
-async function crud_users(req, res){
+async function crud_users(req, res, hash){
     const { id } = req.params;
     const { username, pass, email } = req.body;
     const protocol = req.originalUrl.split('/')[1];
@@ -24,8 +25,10 @@ async function crud_users(req, res){
         read: `SELECT * FROM users WHERE id = ${id}`, 
         create: `INSERT INTO users (username, pass, email) VALUES ('${username}', '${pass}', '${email}')`,
         update: `UPDATE users SET username = '${username}', pass = '${pass}', email = '${email}' WHERE id = ${id}`,
-        delete: `DELETE FROM users WHERE id = ${id}`
-    }
+        delete: `DELETE FROM users WHERE id = ${id}`,
+        register: `INSERT INTO users (username, pass, email) VALUES ('${username}', '${hash}', '${email}')`,
+        login: `SELECT * FROM users WHERE username = '${username}'`,
+    };
     const pool = new sql.ConnectionPool(conn.databases[0]);
     pool.on("error", err => {console.log(err)});
     //pool.on("success", succ => {console.log(succ)});
@@ -35,7 +38,7 @@ async function crud_users(req, res){
         
         return r = {
             "success": result
-        }
+        };
     } 
     catch (error) {
         return error;
@@ -54,6 +57,7 @@ app.get('/read_all', async function(req, res){
     console.log(result);
     res.send(result);
 });
+
 app.get('/read/:id', async function(req, res){
     const result = await crud_users(req);
     console.log(result);
@@ -73,91 +77,39 @@ app.put('/update/:id', async function(req, res){
 });
 
 app.delete('/delete/:id', async function(req, res){
-    const result = await crud_users(req);
+    const result = await crud_users(req, res);
     console.log(result);
     res.send(result);
 });
 
-const fake_db = [
-    {
-        username: "Derek", 
-        password: "123",
-    },
-    {
-        username: "Joshua", 
-        password: "456",
-    },
-    {
-        username: "Fabian", 
-        password: "789",
-    },
-];
-
-app.post('/newuser', function(req, res){
-    let body = req.body;
-    fake_db.push(body);
-    res.send(fake_db);
+app.post('/register', async function(req, res){
+    const body = req.body;
+    bcrypt.hash(body.pass, 10, async function(err, hash){
+        const result = await crud_users(req, res, hash);
+        console.log(result);
+        res.send(result);
+    });
 });
 
-app.get('/getallusers', function(req, res){
-    res.send(fake_db);
+app.post('/login', async function(req, res){
+    const body = req.body;
+    const result = await crud_users(req, res);
+    console.log(result);
+    res.send(result);
 });
 
-app.delete('/deleteuser', function(req, res){
-    fake_db.splice(1);
-    res.send(fake_db);
-});
-
-app.put('/updateuser', function(req, res){
-    fake_db.splice(1);
-    let body = req.body;
-    fake_db.push(body);
-    res.send(fake_db);
-});
-
-app.get('/getuser/:id', function(req, res){
-    const id = req.params.id;
-    
-    /* for (let i = 0; i <= fake_db.length; i++){
-        if (id == fake_db.i){
-            console.log(fake_db.i);
-        }
-        console.log(fake_db);
-    } */
-    console.log(id);
-    res.send(fake_db);
-});
-
-app.get('/add', function(req, res){
-    let x = 2;
-    let y = 6;
-    let tt = x + y;
-    res.send(`Addition: ${tt}`);
-});
-
-app.get('/subs', function(req, res){
-    let x = 2;
-    let y = 6;
-    let tt = x - y;
-    res.send(`Substraction: ${tt}`);
-});
-
-app.get('/mult', function(req, res){
-    let x = 2;
-    let y = 6;
-    let tt = x * y;
-    res.send(`Multiplication: ${tt}`);
-});
-
-app.get('/div', function(req, res){
-    let x = 2;
-    let y = 6;
-    let tt = x / y;
-    res.send(`Division: ${tt}`);
-});
+app.use('/cars', require('./router/cars'));
 
 const port = process.env.PORT || 3000;
+
+app.use((req, res, next) => {
+    res.status(404).json({
+        title: "Error 404"
+    });
+});
+
 app.listen(port, () => {
-    //
     console.log(`App is running in port ${port}`);
 });
+
+module.exports = app;
