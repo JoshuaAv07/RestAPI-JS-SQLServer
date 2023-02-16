@@ -1,7 +1,7 @@
 const env = require('dotenv');
 
 env.config({
-    path: './config.env',
+    path: './.env',
 });
 
 module.exports = { 
