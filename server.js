@@ -27,18 +27,31 @@ async function crud_users(req, res, hash){
         update: `UPDATE users SET username = '${username}', pass = '${pass}', email = '${email}' WHERE id = ${id}`,
         delete: `DELETE FROM users WHERE id = ${id}`,
         register: `INSERT INTO users (username, pass, email) VALUES ('${username}', '${hash}', '${email}')`,
-        login: `SELECT * FROM users WHERE username = '${username}'`,
+        login: `findUser '${username}'`,
     };
     const pool = new sql.ConnectionPool(conn.databases[0]);
     pool.on("error", err => {console.log(err)});
     //pool.on("success", succ => {console.log(succ)});
+    
     try {
-        await pool.connect();
-        const result = await pool.request().query(crud[protocol]);
+        console.log(protocol);
+        if (protocol == 'login'){
+            await pool.connect();
+            const result = await pool.request().query(crud[protocol]);
+            const compare = await bcrypt.compare(req.body.pass, result.recordset[0].pass);
         
-        return r = {
-            "success": result
-        };
+            return r = {
+                "success": result,
+                "login": compare
+            };
+        } else {
+            await pool.connect();
+            const result = await pool.request().query(crud[protocol]);
+        
+            return r = {
+                "success": result
+            };
+        }
     } 
     catch (error) {
         return error;
@@ -92,7 +105,6 @@ app.post('/register', async function(req, res){
 });
 
 app.post('/login', async function(req, res){
-    const body = req.body;
     const result = await crud_users(req, res);
     console.log(result);
     res.send(result);
