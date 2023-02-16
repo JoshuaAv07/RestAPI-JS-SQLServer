@@ -38,7 +38,7 @@ async function crud_users(req, res, hash){
         if (protocol == 'login'){
             await pool.connect();
             const result = await pool.request().query(crud[protocol]);
-            const compare = await bcrypt.compare(req.body.pass, result.recordset[0].pass);
+            const compare = await bcrypt.compare(pass, result.recordset[0].pass);
         
             return r = {
                 "success": result,
