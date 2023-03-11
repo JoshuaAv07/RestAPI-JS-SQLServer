@@ -23,7 +23,7 @@ async function crud_users(req, res, hash){
         update: `UPDATE tb_users SET username = '${username}', pass = '${pass}', email = '${email}', avatar = '${avatar}' WHERE id_user = ${id}`,
         delete: `DELETE FROM tb_users WHERE id_user = ${id}`,
         register: `INSERT INTO tb_users (username, pass, email, avatar) VALUES ('${username}', '${hash}', '${email}', '${avatar}')`,
-        login: `SELECT * FROM tb_users WHERE id_user = ${id}`,
+        login: `SELECT * FROM tb_users WHERE username = '${username}'`,
     };
     const pool = new sql.ConnectionPool(conn.databases[0]);
     pool.on("error", err => {console.log(err)});
@@ -37,7 +37,7 @@ async function crud_users(req, res, hash){
             const compare = await bcrypt.compare(req.body.pass, result.recordset[0].pass);
         
             return r = {
-                "success": result,
+                "success": result.recordset,
                 "login": compare
             };
         } else {
