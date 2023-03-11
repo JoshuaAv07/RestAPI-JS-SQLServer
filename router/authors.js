@@ -3,22 +3,17 @@ const router = express.Router();
 const sql = require('mssql');
 const conn = require('../config');
 
-router.use((req, res, next) =>{
-    next();
-});
-
 async function crud_cars(req, res, hash){
     const { id } = req.params;
-    const { brand, model, miles, id_user } = req.body;
+    const { name_author} = req.body;
     const protocol = req.originalUrl.split('/')[2];
     console.log(protocol);
     const crud = {
-        read_all: `SELECT * FROM cars`,
-        read_by_user: `SELECT * FROM cars WHERE id_user = ${id}`,
-        read: `SELECT * FROM cars WHERE id = ${id}`,
-        create: `INSERT INTO cars (brand, model, miles, id_user) VALUES ('${brand}', ${model}, ${miles}, ${id_user})`,
-        update: `UPDATE cars SET brand = '${brand}', model = ${model}, miles = ${miles}, id_user = ${id_user} WHERE id = ${id}`,
-        delete: `DELETE FROM cars WHERE id = ${id}`,
+        read_all: `SELECT * FROM tb_authors`,
+        read: `SELECT * FROM tb_authors WHERE id_author = ${id}`,
+        create: `INSERT INTO tb_authors (name_author) VALUES ('${name_author}')`,
+        update: `UPDATE tb_authors SET name_author = '${name_author}' WHERE id_author = ${id}`,
+        delete: `DELETE FROM tb_authors WHERE id_author = ${id}`,
     };
     const pool = new sql.ConnectionPool(conn.databases[0]);
     pool.on("error", err => {console.log(err)});
@@ -28,7 +23,7 @@ async function crud_cars(req, res, hash){
         const result = await pool.request().query(crud[protocol]);
 
         return r = {
-            "success": result
+            "success": result.recordset
         };
     }
     catch (error){
@@ -40,12 +35,6 @@ async function crud_cars(req, res, hash){
 }
 
 router.get('/read_all', async function(req, res){
-    const result = await crud_cars(req);
-    console.log(result);
-    res.send(result);
-});
-
-router.get('/read_by_user/:id', async function(req, res){
     const result = await crud_cars(req);
     console.log(result);
     res.send(result);

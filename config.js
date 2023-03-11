@@ -10,9 +10,9 @@ module.exports = {
             "name": "development",
             "server": "localhost",
             "port": 1433,
-            "database": "test",
-            "user": "admin",
-            "password": "266100",
+            "database": "manga_project",
+            "user": "sa",
+            "password": "@Dmin1234",
             "options":{
                 "trustServerCertificate": true
             }
