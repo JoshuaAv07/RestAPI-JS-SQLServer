@@ -9,7 +9,7 @@ async function crud_cars(req, res, hash){
     const protocol = req.originalUrl.split('/')[2];
     console.log(protocol);
     const crud = {
-        read_all: `SELECT * FROM tb_authors`,
+        read_all: `SELECT * FROM tb_authors ORDER BY id_author ASC`,
         read: `SELECT * FROM tb_authors WHERE id_author = ${id}`,
         create: `INSERT INTO tb_authors (name_author) VALUES ('${name_author}')`,
         update: `UPDATE tb_authors SET name_author = '${name_author}' WHERE id_author = ${id}`,

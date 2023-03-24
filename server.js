@@ -17,13 +17,18 @@ app.all("*", function(req, res, next){
 
 async function crud_users(req, res, hash){
     const { id } = req.params;
-    const { username, pass, email, avatar } = req.body;
+    const { username, pass, email, avatar, id_manga } = req.body;
     const protocol = req.originalUrl.split('/')[1];
     const crud = {
         update: `UPDATE tb_users SET username = '${username}', pass = '${pass}', email = '${email}', avatar = '${avatar}' WHERE id_user = ${id}`,
         delete: `DELETE FROM tb_users WHERE id_user = ${id}`,
-        register: `INSERT INTO tb_users (username, pass, email, avatar) VALUES ('${username}', '${hash}', '${email}', '${avatar}')`,
+        register: `INSERT INTO tb_users (username, pass, email, avatar) VALUES ('${username}', '${hash}', '${email}', '${avatar}');
+        CREATE TABLE tb_list_${username}(id_manga INT)`,
         login: `SELECT * FROM tb_users WHERE username = '${username}'`,
+        read_list: `SELECT tm.* FROM tb_mangas tm JOIN tb_list_${username} tl ON tm.id_manga=tl.id_manga`,
+        add_list: `INSERT INTO tb_list_${username} (id_manga) VALUES (${id_manga})`,
+        remove_list: `DELETE FROM tb_list_${username} WHERE id_manga=${id_manga}`,
+        get_list_ids: `SELECT * FROM tb_list_${username}`
     };
     const pool = new sql.ConnectionPool(conn.databases[0]);
     pool.on("error", err => {console.log(err)});
@@ -32,13 +37,15 @@ async function crud_users(req, res, hash){
     try {
         console.log(protocol);
         if (protocol == 'login'){
+            let list = await getList(req, res);
             await pool.connect();
             const result = await pool.request().query(crud[protocol]);
             const compare = await bcrypt.compare(req.body.pass, result.recordset[0].pass);
         
             return r = {
                 "success": result.recordset,
-                "login": compare
+                "login": compare,
+                "mangas": list
             };
         } else {
             await pool.connect();
@@ -57,6 +64,16 @@ async function crud_users(req, res, hash){
     }
 }
 
+async function getList(req, res) {
+    req.originalUrl = '/get_list_ids';
+    let response = await crud_users(req, res);
+    let ids = [];
+    response.success.map(col => {
+        ids.push(col.id_manga);
+    })
+    return ids;
+}
+
 app.get('/', function(req, res){
     res.send("Welcome to WikiManga!");
 });
@@ -65,14 +82,14 @@ app.post('/register', async function(req, res){
     const body = req.body;
     bcrypt.hash(body.pass, 10, async function(err, hash){
         const result = await crud_users(req, res, hash);
-        console.log(result);
+        //console.log(result);
         res.send(result);
     });
 });
 
 app.post('/login', async function(req, res){
     const result = await crud_users(req, res);
-    console.log(result);
+    //console.log(result);
     res.send(result);
 });
 
@@ -83,6 +100,24 @@ app.put('/update/:id', async function(req, res){
 });
 
 app.delete('/delete/:id', async function(req, res){
+    const result = await crud_users(req, res);
+    console.log(result);
+    res.send(result);
+});
+
+app.get('/read_list', async function(req, res){
+    const result = await crud_users(req, res);
+    console.log(result);
+    res.send(result);
+});
+
+app.post('/add_list', async function(req, res){
+    const result = await crud_users(req, res);
+    console.log(result);
+    res.send(result);
+});
+
+app.delete('/remove_list', async function(req, res){
     const result = await crud_users(req, res);
     console.log(result);
     res.send(result);

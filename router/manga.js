@@ -9,11 +9,11 @@ async function crud_cars(req, res, hash){
     const protocol = req.originalUrl.split('/')[2];
     console.log(protocol);
     const crud = {
-        read_all: `SELECT * FROM tb_mangas`,
-        read: `SELECT * FROM tb_mangas WHERE id = ${id}`,
+        read_all: `SELECT * FROM tb_mangas ORDER BY id_manga ASC`,
+        read: `SELECT * FROM tb_mangas tm JOIN tb_authors ta ON tm.id_author=ta.id_author WHERE tm.id_manga = ${id}`,
         create: `INSERT INTO tb_mangas (name_manga, id_author, cap_manga, genre_manga, debut_manga, cover_manga, status_manga) VALUES ('${name_manga}', ${id_author}, ${cap_manga}, '${genre_manga}', '${debut_manga}', '${cover_manga}', '${status_manga}')`,
         update: `UPDATE tb_mangas SET name_manga = '${name_manga}', id_author = ${id_author}, cap_manga = ${cap_manga}, genre_manga = '${genre_manga}', debut_manga = '${debut_manga}', cover_manga = '${cover_manga}', status_manga = '${status_manga}' WHERE id_manga = ${id}`,
-        delete: `DELETE FROM tb_mangas WHERE id = ${id}`,
+        delete: `DELETE FROM tb_mangas WHERE id_manga = ${id}`,
     };
     const pool = new sql.ConnectionPool(conn.databases[0]);
     pool.on("error", err => {console.log(err)});
@@ -36,31 +36,31 @@ async function crud_cars(req, res, hash){
 
 router.get('/read_all', async function(req, res){
     const result = await crud_cars(req);
-    console.log(result);
+    //console.log(result);
     res.send(result);
 });
 
 router.get('/read/:id', async function(req, res){
     const result = await crud_cars(req);
-    console.log(result);
+    //console.log(result);
     res.send(result);
 });
 
 router.post('/create', async function(req, res){
     const result = await crud_cars(req);
-    console.log(result);
+    //console.log(result);
     res.send(result);
 });
 
 router.put('/update/:id', async function(req, res){
     const result = await crud_cars(req);
-    console.log(result);
+    //console.log(result);
     res.send(result);
 });
 
 router.delete('/delete/:id', async function(req, res){
     const result = await crud_cars(req);
-    console.log(result);
+    //console.log(result);
     res.send(result);
 });
 
